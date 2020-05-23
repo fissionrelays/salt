@@ -1,0 +1,3 @@
+ENABLED=0
+URLS="https://motd.khicks.net"
+WAIT=5

@@ -1,0 +1,17 @@
+alias please='sudo'
+alias fucking='sudo'
+
+#tmux
+alias tm='tmux'
+alias tml='tmux list-sessions'
+alias tmls='tmux list-sessions'
+alias tma='tmux attach -t'
+alias tmd='tmux detach'
+alias tmn='tmux new'
+alias tmnn='tmux new -s'
+alias tmnw='tmux new-window'
+alias tmks='tmux kill-session -t'
+alias tmkw='tmux kill-window -t'
+alias tmkall='tmux kill-server'
+alias tmrns='tmux rename-session -t'
+alias tmrnw='tmux rename-window -t'

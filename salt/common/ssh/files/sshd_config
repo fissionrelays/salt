@@ -1,0 +1,113 @@
+{% set authentication = salt['pillar.get']('ssh:authentication', 'keyorpassword') -%}
+{% set port = salt['pillar.get']('ssh:port', '22') -%}
+
+# Managed by SaltStack
+
+{% if port is iterable -%}
+{% for p in port -%}
+Port {{p}}
+{% endfor -%}
+{% else %}
+Port {{port}}
+{% endif -%}
+
+Protocol 2
+
+HostKey /etc/ssh/ssh_host_ed25519_key
+HostCertificate /etc/ssh/ssh_host_ed25519_key-cert.pub
+HostKey /etc/ssh/ssh_host_rsa_key
+HostCertificate /etc/ssh/ssh_host_rsa_key-cert.pub
+HostKey /etc/ssh/ssh_host_ecdsa_key
+HostCertificate /etc/ssh/ssh_host_ecdsa_key-cert.pub
+
+{% if authentication == 'key' -%}
+AuthenticationMethods publickey
+PubkeyAuthentication yes
+PasswordAuthentication no
+ChallengeResponseAuthentication no
+AuthorizedKeysFile /etc/ssh/authorized_keys/%u %h/.ssh/authorized_keys
+
+{%- elif authentication == 'password' -%}
+AuthenticationMethods password
+PubkeyAuthentication no
+PasswordAuthentication yes
+ChallengeResponseAuthentication no
+
+{%- elif authentication == 'keyorpassword' -%}
+AuthenticationMethods publickey password
+PubkeyAuthentication yes
+PasswordAuthentication yes
+ChallengeResponseAuthentication no
+AuthorizedKeysFile /etc/ssh/authorized_keys/%u %h/.ssh/authorized_keys
+
+{%- elif authentication == 'keyandpassword' -%}
+AuthenticationMethods publickey,password
+PubkeyAuthentication yes
+PasswordAuthentication yes
+ChallengeResponseAuthentication no
+AuthorizedKeysFile /etc/ssh/authorized_keys/%u %h/.ssh/authorized_keys
+
+{%- elif authentication == 'keyandverification' -%}
+AuthenticationMethods publickey,keyboard-interactive
+PubkeyAuthentication yes
+PasswordAuthentication no
+ChallengeResponseAuthentication yes
+AuthorizedKeysFile /etc/ssh/authorized_keys/%u %h/.ssh/authorized_keys
+
+{%- elif authentication == 'passwordandverification' -%}
+AuthenticationMethods keyboard-interactive
+PubkeyAuthentication no
+PasswordAuthentication no
+ChallengeResponseAuthentication yes
+
+{%- elif authentication == 'keyandpasswordandverification' -%}
+AuthenticationMethods publickey,keyboard-interactive
+PubkeyAuthentication yes
+PasswordAuthentication no
+ChallengeResponseAuthentication yes
+AuthorizedKeysFile /etc/ssh/authorized_keys/%u %h/.ssh/authorized_keys
+
+{%- else -%}
+AuthenticationMethods publickey password
+PubkeyAuthentication yes
+PasswordAuthentication yes
+ChallengeResponseAuthentication no
+AuthorizedKeysFile /etc/ssh/authorized_keys/%u %h/.ssh/authorized_keys
+
+{%- endif %}
+
+UsePAM yes
+
+# Logging
+SyslogFacility AUTH
+LogLevel INFO
+
+# Authentication:
+LoginGraceTime 120
+PermitRootLogin no
+StrictModes yes
+
+# Don't read the user's ~/.rhosts and ~/.shosts files
+IgnoreRhosts yes
+# similar for protocol version 2
+HostbasedAuthentication no
+# Uncomment if you don't trust ~/.ssh/known_hosts for RhostsRSAAuthentication
+#IgnoreUserKnownHosts yes
+
+PermitEmptyPasswords no
+
+X11Forwarding yes
+X11DisplayOffset 10
+PrintMotd no
+PrintLastLog yes
+TCPKeepAlive yes
+
+#MaxStartups 10:30:60
+Banner /etc/ssh/banner
+
+# Allow client to pass locale environment variables
+AcceptEnv LANG LC_*
+
+UseDNS no
+
+Subsystem sftp internal-sftp

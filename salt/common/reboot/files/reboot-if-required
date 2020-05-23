@@ -1,0 +1,12 @@
+#!/bin/bash -e
+
+if [[ $EUID -ne 0 ]]; then
+    echo "Error: You must run this script with sudo or as root." 1>&2
+    exit 1
+fi
+
+[ -f /var/run/reboot-required ] || exit 0
+
+sleep $((RANDOM %= 1800)) #1800
+echo "The system is going down for by reboot_if_required NOW!" | wall
+/sbin/shutdown -r --no-wall now

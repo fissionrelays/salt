@@ -1,0 +1,9 @@
+# Managed by SaltStack
+
+Unattended-Upgrade::Allowed-Origins {
+        "${distro_id}:${distro_codename}";
+        "${distro_id}:${distro_codename}-security";
+        "${distro_id}:${distro_codename}-updates";
+};
+
+Unattended-Upgrade::Remove-Unused-Dependencies "true";

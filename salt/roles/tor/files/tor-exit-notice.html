@@ -1,0 +1,46 @@
+{% if salt['pillar.get']('tor:relay:enabled', False) -%}
+{% set relay = salt['pillar.get']('tor:relay') -%}
+
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<title>This is a Tor {% if relay.get('ExitRelay', False) %}Exit {% endif -%} Router</title>
+
+<style>
+body {
+  font-family: monospace;
+}
+</style>
+</head>
+<body>
+<h1>This is a Tor {% if relay.get('ExitRelay', False) %}Exit {% endif -%} Router</h1>
+<p>Requests you receive from this router do not originate on this router.</p>
+
+<table>
+<tr>
+<td><b>Name:</b></td>
+<td>{{ relay.get('Nickname', salt['grains.get']('id')) }}</td>
+</tr>
+<tr>
+<td><b>Is exit:</b></td>
+<td>{% if relay.get('ExitRelay', False) %}Yes{% else %}No{% endif %}</td>
+</tr>
+<tr>
+<td><b>Relay home page:</b></td>
+<td><a href="https://fissionrelays.net">https://fissionrelays.net</a></td>
+</tr>
+<tr>
+<td><b>Tor Project home page:</b></td>
+<td><a href="https://www.torproject.org">https://www.torproject.org</a></td>
+</tr>
+<tr>
+<td><b>Abuse complaints:</b></td>
+<td><a href="https://fissionrelays.net/abuse">https://fissionrelays.net/abuse</a></td>
+</tr>
+</table>
+</body>
+</html>
+{%- endif %}

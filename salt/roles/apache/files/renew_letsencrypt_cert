@@ -1,0 +1,29 @@
+#!/bin/bash
+
+if [ $# -eq 0 ]; then
+    echo "ERROR: Script requires at least one argument." >&2
+    exit 1
+fi
+
+DOMAINS=""
+DOMAINSD=""
+for DOMAIN in "$@"
+do
+    if [ ${#DOMAINS} -eq 0 ]; then
+        DOMAINS="$DOMAIN"
+        DOMAINSD="-d $DOMAIN"
+    else
+        DOMAINS="$DOMAINS $DOMAIN"
+        DOMAINSD="$DOMAINSD -d $DOMAIN"
+    fi
+done
+
+if ! /usr/local/sbin/check_letsencrypt_cert ${DOMAINS} 2>/dev/null; then
+    if ! /usr/bin/certbot -n -q certonly ${DOMAINSD}; then
+        echo "ERROR: Obtaining new certificate for domains $DOMAINS failed." >&2
+        exit 5
+    fi
+
+    echo "SUCCESS: Certificate for domains $DOMAINS renewed."
+    service apache2 reload
+fi

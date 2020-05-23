@@ -1,0 +1,101 @@
+DataDirectory {{ salt['pillar.get']('tor:DataDirectory') }}
+SocksPort {{ salt['pillar.get']('tor:SocksPort') }}
+ControlPort {{ salt['pillar.get']('tor:ControlPort') }}
+SocksPolicy reject *
+Log {{ salt['pillar.get']('tor:Log') }}
+
+{% if salt['pillar.get']('tor:relay:enabled', False) -%}
+{% set relay = salt['pillar.get']('tor:relay') -%}
+# Relay
+Nickname {{ relay.get('Nickname', salt['grains.get']('id')) }}
+{%- if relay.get('ContactInfo') %}
+ContactInfo {{ relay.get('ContactInfo') }}
+{%- endif %}
+{%- if not relay.get('ORPort') or relay.get('ORPort') is string or relay.get('ORPort') is number %}
+ORPort {{ relay.get('ORPort', '9001') }}
+{%- elif relay.get('ORPort') is mapping %}
+ORPort {{ relay.get('ORPort').get('Advertise') }} NoListen
+ORPort {{ relay.get('ORPort').get('Listen') }} NoAdvertise
+{%- endif %}
+{%- if relay.get('ORPort6') is string or relay.get('ORPort6') is number %}
+ORPort {{ relay.get('ORPort6', '9001') }}
+{%- elif relay.get('ORPort6') is mapping %}
+ORPort {{ relay.get('ORPort6').get('Advertise').get('Address') }}:{{ relay.get('ORPort6').get('Advertise').get('Port') }} NoListen
+ORPort {{ relay.get('ORPort6').get('Listen').get('Address') }}:{{ relay.get('ORPort6').get('Listen').get('Port') }} NoAdvertise
+{%- endif %}
+{%- if not relay.get('DirPort') or relay.get('DirPort') is string or relay.get('DirPort') is number %}
+DirPort {{ relay.get('DirPort', '9030') }}
+{%- elif relay.get('DirPort') is mapping %}
+DirPort {{ relay.get('DirPort').get('Advertise') }} NoListen
+DirPort {{ relay.get('DirPort').get('Listen') }} NoAdvertise
+{%- endif %}
+{%- if relay.get('DirPortFrontPage') %}
+DirPortFrontPage {{ relay.get('DirPortFrontPage') }}
+{%- endif %}
+{%- if relay.get('RelayBandwidthRate') %}
+RelayBandwidthRate {{ relay.get('RelayBandwidthRate') }}
+{%- endif %}
+{%- if relay.get('RelayBandwidthBurst') %}
+RelayBandwidthBurst {{ relay.get('RelayBandwidthBurst') }}
+{%- endif %}
+{%- if relay.get('Address') %}
+Address {{ relay.get('Address') }}
+{%- endif %}
+{%- if relay.get('OutboundBindAddress') %}
+OutboundBindAddress {{ relay.get('OutboundBindAddress') }}
+{%- endif %}
+{%- if relay.get('AccountingMax') %}
+AccountingMax {{ relay.get('AccountingMax') }}
+{%- endif %}
+{%- if relay.get('AccountingStart') %}
+AccountingStart {{ relay.get('AccountingStart') }}
+{%- endif %}
+{%- if relay.get('MyFamily') is list %}
+MyFamily {% for member in relay.get('MyFamily') %}${{ member }}{% if not loop.last %},{% endif %}{% endfor %}
+{%- endif %}
+
+# Exit
+ExitRelay {% if relay.get('ExitRelay', False) %}1{% else %}0{% endif %}
+{%- if relay.get('ExitRelay', False) %}
+{%- if relay.get('ORPort6') is defined %}
+IPv6Exit 1
+{%- endif %}
+{%- for policy in relay.get('ExitPolicyCustom', []) %}
+ExitPolicy {{ policy }}
+{%- endfor %}
+{%- for policy in relay.get('ExitPolicy', []) %}
+ExitPolicy {{ policy }}
+{%- endfor %}
+{%- endif %}
+ExitPolicy reject *:*
+{%- endif %}
+
+{% if salt['pillar.get']('tor:bridge:enabled', False) -%}
+{% set bridge = salt['pillar.get']('tor:bridge') -%}
+# Bridge
+BridgeRelay 1
+{%- if bridge.get('Nickname', False) %}
+Nickname {{ bridge.get('Nickname') }}
+{%- endif %}
+ContactInfo {{ bridge.get('ContactInfo') }}
+ORPort {{ bridge.get('ORPort', 10000) }}
+{%- if bridge.get('ORAddr6', False) %}
+ORPort {{ bridge.get('ORAddr6') }}:{{ bridge.get('ORPort', 10000) }}
+{%- endif %}
+PublishServerDescriptor {{ bridge.get('PublishServerDescriptor', 0) }}
+ServerTransportPlugin {{ bridge.get('ServerTransportPlugin') }}
+ServerTransportListenAddr {{ bridge.get('ServerTransportListenPlugin') }} {{ bridge.get('ServerTransportListenAddr') }}:{{ bridge.get('ServerTransportListenPort') }}
+ExtORPort {{ bridge.get('ExtORPort', 10001) }}
+ExitRelay 0
+{%- endif %}
+
+# Hidden Services
+{%- for service in salt['pillar.get']('tor:hiddenservices', []) %}
+HiddenServiceDir {{ service.dir }}
+{%- if service.version is defined %}
+HiddenServiceVersion {{ service.version }}
+{%- endif %}
+{%- for hsport in service.ports %}
+HiddenServicePort {{ hsport.port }} {{ hsport.dest }}
+{%- endfor %}
+{% endfor %}

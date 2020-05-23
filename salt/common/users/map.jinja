@@ -1,0 +1,37 @@
+{% set common_revoked_users = salt['pillar.get']('users:common:revoked', []) %}
+{% set host_revoked_users = salt['pillar.get']('users:host:revoked', []) %}
+
+{% set role_revoked_users = [] %}
+{% for role, users in salt['pillar.get']('users:role', {}).items() %}
+{% for user in users.get('revoked', []) %}
+{% do role_revoked_users.append(user) %}
+{% endfor %}
+{% endfor %}
+
+{% set revoked_users = (common_revoked_users + role_revoked_users + host_revoked_users)|sort|unique %}
+
+
+{% set common_active_users = salt['pillar.get']('users:common:active', []) %}
+{% set host_active_users = salt['pillar.get']('users:host:active', []) %}
+
+{% set role_active_users = [] %}
+{% for role, users in salt['pillar.get']('users:role', {}).items() %}
+{% for user in users.get('active', []) %}
+{% do role_active_users.append(user) %}
+{% endfor %}
+{% endfor %}
+
+{% set active_users = (common_active_users + role_active_users + host_active_users)|sort|unique|difference(revoked_users) %}
+
+
+{% set common_sudoers = salt['pillar.get']('users:common:sudoers', []) %}
+{% set host_sudoers = salt['pillar.get']('users:host:sudoers', []) %}
+
+{% set role_sudoers = [] %}
+{% for role, users in salt['pillar.get']('users:role', {}).items() %}
+{% for user in users.get('sudoers', []) %}
+{% do role_sudoers.append(user) %}
+{% endfor %}
+{% endfor %}
+
+{% set sudoers = (common_sudoers + role_sudoers + host_sudoers)|sort|unique|difference(revoked_users) %}

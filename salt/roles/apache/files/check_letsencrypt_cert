@@ -1,0 +1,32 @@
+#!/bin/bash
+
+RENEW_DAYS=35
+
+if [ $# -eq 0 ]; then
+    echo "ERROR: Script requires at least one argument." >&2
+    exit 1
+fi
+
+if [ ! -f /etc/letsencrypt/live/$1/cert.pem ]; then
+    echo "RENEW: Certificate file for $1 not found." >&2
+    exit 2
+fi
+
+for DOMAIN in "$@"
+do
+    openssl x509 -in /etc/letsencrypt/live/$1/cert.pem -noout -text | grep DNS:${DOMAIN} >/dev/null
+    if [ $? -ne 0 ]; then
+        echo "RENEW: Domain $DOMAIN not found in certificate for $1." >&2
+        exit 3
+    fi
+done
+
+CERT_EXP=$(date -d "$(openssl x509 -in /etc/letsencrypt/live/$1/cert.pem -enddate -noout | cut -d'=' -f2)" "+%s")
+CURRENT_TIME=$(date "+%s")
+REMAINING_DAYS=$((($CERT_EXP - $CURRENT_TIME) / 60 / 60 / 24))
+if [ $REMAINING_DAYS -le $RENEW_DAYS ]; then
+    echo "RENEW: Certificate for $1 expires in $REMAINING_DAYS and should be renewed" >&2
+    exit 4
+fi
+
+echo "OKAY: Domains $@ are in certificate and certificate is valid for $REMAINING_DAYS days."

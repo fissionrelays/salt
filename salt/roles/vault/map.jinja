@@ -1,0 +1,11 @@
+{% set vault = salt['pillar.get']('vault') %}
+
+{% set vault = salt['grains.filter_by']({
+    'aarch64': {
+      "arch": 'arm64'
+    },
+    'x86_64': {
+      "arch": 'amd64'
+    }
+  },
+grain="cpuarch", merge=vault) %}
