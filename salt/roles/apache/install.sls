@@ -69,6 +69,16 @@ apache2:
     - watch_in:
       - module: restart_apache_setup
 
+apache_disable_status:
+  file.absent:
+    - names:
+      - /etc/apache2/mods-enabled/status.conf
+      - /etc/apache2/mods-enabled/status.load
+    - require:
+      - pkg: apache2
+    - watch_in:
+      - module: restart_apache_setup
+
 /srv/www:
   file.directory:
     - user: root
