@@ -16,7 +16,7 @@ delete_user_{{ username }}:
 {% endfor %}
 
 {% for username in active_users %}
-{% set user = salt['vault'].read_secret('secret/data/users/{}'.format(username), 'data') %}
+{% set user = salt['vault'].read_secret('secret/users/{}'.format(username)) %}
 add_user_{{ username }}:
   group.present:
     - name: {{ username }}
